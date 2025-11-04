@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const bcrypt = require('bcryptjs');
 
-const userSchema = Schema({
+const userSchema = new Schema({
 
     email: {
         type: String,
@@ -15,7 +15,6 @@ const userSchema = Schema({
     password: {
         type: String,
         required: true,
-        minlength: 8
     },
 
     first_name: {
@@ -48,9 +47,6 @@ const userSchema = Schema({
     timestamps: true
 });
 
-
-User = mongoose.model('User', userSchema);
-module.exports = User;
 //--------------------------METHODS-----------------------------
 
 //password validation
@@ -63,10 +59,17 @@ userSchema.methods.correctPassword = async function(candidatePassword) {
 //-----------------------PRE-HOOKS----------------------------
 
 userSchema.pre('save', async function(next) {
-    if(!this.isModified('password')) return next();
+    try {
+        if(!this.isModified('password')) {return next()};
 
-    const saltRounds = 12;
-    const hash = await bcrypt.hash(this.password, saltRounds);
-    this.password= hash;
-    return next();
+        const saltRounds = 12;
+        this.password = await bcrypt.hash(this.password, saltRounds);
+        return next();
+    } catch(error) { console.log(error) }
 });
+
+
+// compile the model after defining middleware
+
+User = mongoose.model('User', userSchema);
+module.exports = User;

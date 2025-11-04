@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
+const routeAuth = require('./src/routes/auth');
 
 const app = express();
 
@@ -17,11 +18,10 @@ app.use(morgan('combined'));
 // To parse requests into json format for an efficient data handling
 app.use(express.json());
 
+//authentication endpoint
+app.use('/api', routeAuth)
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(process.env.MONGODB_URI);
 
 // Basic health check route
 app.get('/health', (req, res) => {
@@ -35,3 +35,9 @@ app.use((error, req, res, next) => {
 });
 
 module.exports = app;
+
+const PORT = process.env.PORT;
+
+app.listen(PORT, () => {
+  console.log(`listening on port: ${PORT}`)
+})
