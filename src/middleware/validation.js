@@ -1,12 +1,14 @@
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 
 
 exports.validateRegistration = [
     body('email')
+        .notEmpty()
         .isEmail()
         .normalizeEmail()
         .withMessage('please provide a valid email'),
     body('password')
+        .notEmpty()
         .isLength({min: 8})
         .withMessage('Password must be at least 8 characters'),
     body('first_name')
@@ -26,10 +28,12 @@ exports.validateRegistration = [
 
 exports.validateLogin = [
     body('email')
+        .notEmpty()
         .isEmail()
         .normalizeEmail()
         .withMessage('please provide a valid email'),
     body('password')
+        .notEmpty()
         .isLength({min: 8})
         .withMessage('Password must be at least 8 characters'),
 ];
@@ -55,19 +59,22 @@ const isFutureDate = (value) => {
 };
 
 
-exports.validateTask = [
+exports.validateNewTask = [
     body('title')
-        .isEmpty()
+        .notEmpty()
+        .isString()
         .trim()
         .isLength({max: 100})
         .withMessage('invalid title. Title shouldn`t be empty or more than 100 letters'),
     body('description')
-        .isEmpty()
+        .notEmpty()
+        .isString()
         .trim()
         .isLength({max: 1000})
         .withMessage('invalid description. Description shouldn`t be empty or more than 1000 letters'),
     body('status')
-        .isEmpty()
+        .notEmpty()
+        .isString()
         .isIn(['todo', 'in-progress', 'done'])
         .withMessage('invalid status'),
     body('priority')
@@ -80,3 +87,45 @@ exports.validateTask = [
         .custom(isFutureDate)
         .withMessage('date must be in the future'),
 ];
+
+exports.validateModifierTask = [
+    body('title')
+        .optional()
+        .notEmpty().withMessage('title cannot be empty')
+        .trim()
+        .isLength({max:100})
+        .withMessage('invalid title data'),
+    body('description')
+        .optional()
+        .notEmpty().withMessage('description cannot be empty')
+        .trim()
+        .isLength({max: 100})
+        .withMessage('invalid description data'),
+    body('status')
+        .optional()
+        .notEmpty().withMessage('status cannot be empty')
+        .isIn(['todo', 'in-progress', 'done'])
+        .withMessage('invalid status data'),
+    body('priority')
+        .optional()
+        .notEmpty().withMessage('priority cannot be empty')
+        .isIn(['low', 'medium', 'high'])
+        .withMessage('invalid priority data'),
+    body('dueDate')
+        .optional()
+        .notEmpty().withMessage('due date cannot be empty')
+        .isISO8601().withMessage('date must be in ISO8601')
+        .custom(isFutureDate)
+        .withMessage('invalid Due Date data')
+]
+
+exports.validateAssignTask = [
+    query('taskId')
+        .isHexadecimal().withMessage('invalid task ID'),
+    query('userId')
+        .isHexadecimal().withMessage('invalid user ID'),
+    query('type')
+        .optional()
+        .isIn(['deassign', 'assign'])
+        .withMessage('invalid data')
+]

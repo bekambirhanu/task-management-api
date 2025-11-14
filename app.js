@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 const routeAuth = require('./src/routes/auth');
+const routeCRUD = require('./src/routes/task');
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.use(express.json());
 
 //authentication endpoint
 app.use('/api', routeAuth)
+
+app.use('/tasks', routeCRUD)
 // Database connection
 mongoose.connect(process.env.MONGODB_URI);
 

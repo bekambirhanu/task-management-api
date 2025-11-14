@@ -71,5 +71,5 @@ userSchema.pre('save', async function(next) {
 
 // compile the model after defining middleware
 
-User = mongoose.model('User', userSchema);
+ const User = mongoose.model('User', userSchema);
 module.exports = User;

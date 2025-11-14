@@ -45,10 +45,11 @@ const taskSchema = new Schema({
         required: true,
     },
 
-    assignedTo: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User'
-    }],
+    assignedTo: {
+        type: [Schema.Types.ObjectId],
+        ref: 'User',
+        unique: true
+    }
 },{
     timestamps: true
 });

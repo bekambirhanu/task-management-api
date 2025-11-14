@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
 
         const { email, password, first_name, last_name, sex, role } = req.body;
         // check if the user already exists
-        const existingUser = await User.findOne({email: email}).exec();
+        const existingUser = await User.findOne({email: email}, {_id: 0, email: 1, password: 1}).exec();
         if(existingUser) return res.status(403).json({success: false, message: "E-mail already exists"})
         
         // if the user is new, proceed to register
@@ -33,6 +33,7 @@ exports.register = async (req, res) => {
             user._id,
             user.email,
             user.first_name,
+            user.role,
             JWT_SECRET_TOKEN,
             '24h'
         )
@@ -69,7 +70,7 @@ exports.login = async (req, res) => {
 try{
     const { email, password } = req.body;
 
-    const user = await User.findOne({email: email});
+    const user = await User.findOne({email: email}, {tasks: 0, sex: 0});
 
     if (!user) return res.status(401).json({success: false, message: 'Login failed: invalid email or password'});
 
@@ -77,12 +78,19 @@ try{
 
     if(!isPasswordValid) return res.status(401).json({success: false, message: 'Login failed: invalid email or password'});
 
-    const token= generate_token(user._id, user.email, user.first_name, JWT_SECRET_TOKEN, '24h');
+    const token= generate_token(
+        user._id, 
+        user.email, 
+        user.first_name,
+        user.role,
+        JWT_SECRET_TOKEN, 
+        '24h'
+    );
 
     return res.status(201).json({
         sucess: true,
         message: "Login Successfull",
-        data: token,
+        token: token,
         user:{
             id: user._id,
             email: user.email,

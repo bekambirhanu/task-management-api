@@ -2,13 +2,13 @@ const jwt = require('jsonwebtoken');
 
 // To generate new token
 
-exports.generate_token = function(userId, userEmail, userName, userSex, jwt_secret_token, expiresIn='1h'){
+exports.generate_token = function(userId, userEmail, userName,userRole, jwt_secret_token, expiresIn='1h'){
     const token = jwt.sign(
         {
-            userId: userId,
-            userEmail: userEmail,
-            userName: userName,
-            userSex: userSex
+            id: userId,
+            email: userEmail,
+            first_name: userName,
+            role: userRole
         },
         jwt_secret_token,
         {

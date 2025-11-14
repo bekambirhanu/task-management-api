@@ -13,9 +13,9 @@ exports.protectedRoute = (req, res, next) => {
 
     jwt.verify(token, JWT_SECRET_TOKEN, (err, decode) => {
         if (err) {
-            return res.status(403).json({success: true, message:'Access Denied: Invalid Token'});
+            return res.status(403).json({success: false, message:'Access Denied: Invalid Token'});
+            
         }
-
         // If successful, attach the user data to the request object and proceed
         req.user = decode;
         next();
