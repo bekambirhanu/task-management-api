@@ -44,8 +44,8 @@ exports.getTask = async (req, res) => {
             assignedTo,
             skip,
             limit,
-            sort= 'createdAt',
-            order= 'desc'
+            afterDate,
+            beforeDate
         } = req.query;
 
         const filter = {};
@@ -53,6 +53,7 @@ exports.getTask = async (req, res) => {
         if(priority) filter.priority = priority;
         if(dueDate) filter.dueDate = {$gte: new Date(dueDate)}; // for tasks that their deadline is far
         if(deadline) filter.dueDate = {$lte: new Date(deadline)}; // for tasks that their deadline is approaching
+        if(afterDate || beforeDate) filter.createdAt = {$gt: afterDate&& new Date(afterDate), $lt: beforeDate&& new Date(beforeDate)};
         if(assignedTo) filter.assignedTo = assignedTo;
 
         const options = {};
@@ -68,9 +69,14 @@ exports.getTask = async (req, res) => {
         }
 
         const data = await Task.find(filter)
-                                .populate({path: 'createdBy', select:['_id', 'email', 'first_name', 'last_name', 'role']})
-                                .populate({path:'assignedTo', select:['_id', 'email', 'first_name', 'last_name', 'role']});
-        
+                                .populate([
+                                    {path: 'createdBy', select:'_id email first_name last_name role'},
+                                    {path:'assignedTo', select:'_id email first_name last_name role'}
+                                ])
+                                .sort({createdAt: -1})
+                                .skip(options.skip)
+                                .limit(options.limit)
+        console.log("here")
          return res.status(200).send(data);
 
     } catch(error) {
