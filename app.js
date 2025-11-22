@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-require('dotenv').config();
+const { MONGODB_URI, PORT } = require('./envVars')
 const routeAuth = require('./src/routes/auth');
 const routeCRUD = require('./src/routes/task');
 
@@ -24,7 +24,7 @@ app.use('/api', routeAuth)
 
 app.use('/tasks', routeCRUD)
 // Database connection
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(MONGODB_URI);
 
 // Basic health check route
 app.get('/health', (req, res) => {
@@ -39,7 +39,6 @@ app.use((error, req, res, next) => {
 
 module.exports = app;
 
-const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
   console.log(`listening on port: ${PORT}`)

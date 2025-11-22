@@ -11,6 +11,9 @@ exports.validateRegistration = [
         .notEmpty()
         .isLength({min: 8})
         .withMessage('Password must be at least 8 characters'),
+    body('verify_key')
+        .notEmpty().withMessage("empty key")
+        .isString().withMessage("invalid key"),
     body('first_name')
         .notEmpty()
         .trim()
@@ -128,4 +131,18 @@ exports.validateAssignTask = [
         .optional()
         .isIn(['deassign', 'assign'])
         .withMessage('invalid data')
+]
+
+exports.validateEmail = [
+    body('email')
+        .notEmpty().withMessage('email is empty!')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage("invalid email")
+]
+
+exports.validateRecoveryKey = [
+    body('recovery_key')
+        .notEmpty().withMessage("recovery key is empty")
+        .isString().withMessage("Invalid recovery key")
 ]
