@@ -23,7 +23,7 @@ exports.protectedRoute = (req, res, next) => {
     });
 };
 
-
+// recovery key middleware
 exports.checkToken  = async (req, res, next) => {
     try {
     const { email, recovery_key } = req.body;
@@ -60,9 +60,9 @@ exports.checkToken  = async (req, res, next) => {
 // If everything is fine, set the user email and move on to change password
     req.user_email = email;
     next();
-}catch(error) {
+    }catch(error) {
     console.log(error);
     return res.status(500).json({success: false, message: "Internal Server error"});
-}
+    }
 
 }

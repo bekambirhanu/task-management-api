@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { MONGODB_URI, PORT } = require('./envVars')
-const routeAuth = require('./src/routes/auth');
-const routeCRUD = require('./src/routes/task');
+const { MONGODB_URI, PORT } = require('../envVars')
+const routeAuth = require('./routes/auth');
+const routeCRUD = require('./routes/task');
 
 const app = express();
 
@@ -22,7 +22,12 @@ app.use(express.json());
 //authentication endpoint
 app.use('/api', routeAuth)
 
-app.use('/tasks', routeCRUD)
+//task crud operation endpoint
+app.use('/api', routeCRUD)
+
+//realtime endpoint
+app.use('/socket')
+
 // Database connection
 mongoose.connect(MONGODB_URI);
 
