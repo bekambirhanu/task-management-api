@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { MONGODB_URI, PORT } = require('../envVars')
+const { MONGODB_URI } = require('../envVars')
 const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
 
@@ -26,7 +26,6 @@ app.use('/api', routeAuth)
 app.use('/api', routeCRUD)
 
 //realtime endpoint
-app.use('/socket')
 
 // Database connection
 mongoose.connect(MONGODB_URI);
@@ -43,8 +42,3 @@ app.use((error, req, res, next) => {
 });
 
 module.exports = app;
-
-
-app.listen(PORT, () => {
-  console.log(`listening on port: ${PORT}`)
-})
