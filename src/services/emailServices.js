@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { EMAIL_SERVICE, PASSWORD_SENDER_EMAIL, PASSWORD_SENDER_KEY, CLIENT_URL, EMAIL_FROM } = require('../../envVars');
+const { EMAIL_SERVICE, PASSWORD_SENDER_EMAIL, PASSWORD_SENDER_KEY, CLIENT_URL, EMAIL_FROM, PORT } = require('../../envVars');
 
 class EmailService {
     constructor() {
@@ -16,13 +16,14 @@ class EmailService {
     };
 
     async sendPasswordReset(email, name, resetToken) {
-        const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}`;
+        const resetUrl = `${CLIENT_URL}/reset-password?token=${resetToken}` | null;
         
         const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333;">Password Reset Request</h2>
             <p>Hello ${name},</p>
             <h1><bold>Token: ${resetToken}</bold></h1>
+            <p><small>Alternative, click on ${resetUrl} to verify the token right away.</small></p>
             <p><small>This token will expire in 1 hour.</small></p>
             <p>If you didn't request this, please ignore this email.</p>
         </div>
