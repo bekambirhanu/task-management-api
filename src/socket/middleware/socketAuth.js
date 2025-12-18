@@ -6,8 +6,7 @@ const User = require('../../models/User');
 
 exports.socketAuth = async (socket, next) => {
     try {
-        console.log(socket)
-        const token = socket.handshake.headers.authorization || socket.query.token || null;
+        const token = socket.handshake.headers.authorization || socket.handshake.auth.token || socket.query.token || null;
         if (!token || !token.startsWith("Bearer ")) return next(new Error('Authentication error: Token Missing'));
         
         // validate the token
@@ -20,7 +19,7 @@ exports.socketAuth = async (socket, next) => {
         socket.userId = user._id;
         socket.userEmail = decode.email;
         socket.first_name = decode.first_name;
-        socket.role = decode.role;
+        socket.userRole = decode.role;
 
         console.log(`Socket authenticated for user: ${socket.userEmail}, (${socket.userId})`);
 

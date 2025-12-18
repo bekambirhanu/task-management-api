@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const { MONGODB_URI } = require('../envVars')
 const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
+const { timeout } = require('./Server');
 
 const app = express();
 
@@ -28,7 +29,16 @@ app.use('/api', routeCRUD)
 //realtime endpoint
 
 // Database connection
-mongoose.connect(MONGODB_URI);
+try{
+  mongoose.connect(MONGODB_URI);
+} catch(error) {
+  if(error === mongoose.MongooseError) {
+    console.log(`Connection Error:\n ${error}`);
+  }
+  else {
+    console.log(error);
+  }
+}
 
 // Basic health check route
 app.get('/health', (req, res) => {

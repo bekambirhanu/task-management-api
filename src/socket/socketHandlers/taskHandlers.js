@@ -1,41 +1,53 @@
 const Task = require("../../models/Task")
 
 
+
 module.exports = (io, socket) => {
 
     socket.on('join_task', async (taskId) => {
+        const task_id = typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id;
+
         try {
-            if(!taskId) {socket.to(`user_${socket.userId}`).emit(json({'message': 'no task provided!'}))}
-            
-            const task = Task.findOne(
-                {
-                    _id: (taskId)
-                }
-            )
+            if(!task_id) {await io.to(socket.id).emit("join_request", {'message': 'no task provided!'})};
+
+            const task = await Task.findById(task_id);
 
             if(task){
-                socket.join(`task_${taskId}`);
-                console.log(`User ${socket.userId} joined task ${taskId}`);
+                await socket.join(`task_${task_id}`);
+                console.log(`User ${socket.userId} joined task ${task._id}`);
+                
 
-                socket.to(`user_${socket.userId}`).emit('task_join', {'message': "task joined"});
+                if(io.sockets.adapter.rooms?.get(`task_${task_id}`)?.has(socket.id)) {
+                    await io.to(`task_${task_id}`).emit('join_request', {'message': `User ${socket.first_name} joined task`});
+                }
+                else {
+                    await io.to(socket.id).emit("join_request", {'message': 'task not joined'});
+                }
             } else{
-                socket.to(`user_${socket.userId}`).emit('error', {'message': "task doesnt exist"});
+                await io.to(socket.id).emit('error', {'message': "task doesn't exist"});
 
             }
 
 
         } catch(err) {
-            socket.on(`user_${socket.userId}`).emit('error', {"message": "failed to join task"});
+            await io.to(socket.id).emit('error', {"message": "failed to join task"});
+            console.log(err)
         }
     });
 
 
-    socket.on('leave_task', (taskId) => {
-        socket.leave(`task_${taskId}`);
+    socket.on('leave_task', async (taskId) => {
+        const task_id = typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id;
+
+        await socket.leave(`task_${task_id}`);
+        console.log(`User ${socket.userId} left room task_${task_id}`)
     });
 
     // Task create event
     socket.on('create_task', async (taskData) => {
+        const task_data = typeof(taskData) === String? JSON.parse(taskData): typeof(taskData) === Object? taskData: null;
+        if(task_data === null) return await socket.emit('create_request', {"message": "invalid task data"});
+
         try{
             const task = new Task({...taskData, createdBy: socket.userId});
 
@@ -43,14 +55,14 @@ module.exports = (io, socket) => {
 
             if(task.assignedTo && task.assignedTo.length > 0) {
                 task.assignedTo.forEach((userId) => {
-                    socket.to(`user_${userId}`).emmit('new_task_assigned', {
+                    io.to(`user_${userId}`).emit('task_assigned', {
                         "task": task,
                         "message": "You have been assigned to a new task"
                     }); 
                 });
             }
 
-            socket.to(`task_${task._id}`).emit('task_created', {
+            io.to(`task_${task._id}`).emit('create_request', {
                 "task": task,
                 "message": "A new task is created"
             });
@@ -58,7 +70,7 @@ module.exports = (io, socket) => {
 
     }catch(err) {
         console.log(`SocketError: ${err}`);
-        socket.to(`user_${socket.userId}`).emit('error', {'message':`Internal Error, task unsuccessful`});
+        io.to(socket.id).emit('error', {'message':`Internal Error, task unsuccessful`});
     }
     });
 };
