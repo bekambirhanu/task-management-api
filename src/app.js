@@ -7,6 +7,7 @@ const { MONGODB_URI } = require('../envVars')
 const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
 const { timeout } = require('./Server');
+const { rateLimiter } = require('./middleware/rateLimit');
 
 const app = express();
 
@@ -19,14 +20,16 @@ app.use(cors());
 app.use(morgan('combined'));
 // To parse requests into json format for an efficient data handling
 app.use(express.json());
+// To check rate limiting
+app.use(rateLimiter);
 
-//authentication endpoint
-app.use('/api', routeAuth)
+// Authentication endpoint
+app.use('/api', routeAuth);
 
-//task crud operation endpoint
-app.use('/api', routeCRUD)
+// Task crud operation endpoint
+app.use('/api', routeCRUD);
 
-//realtime endpoint
+// Real time endpoint
 
 // Database connection
 try{
