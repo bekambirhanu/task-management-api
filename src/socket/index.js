@@ -3,6 +3,7 @@ const { CLIENT_URL } = require('../../envVars');
 const { socketAuth } = require('./middleware/socketAuth');
 const taskHandlers = require('./socketHandlers/taskHandlers');
 const userHandlers = require('./socketHandlers/userHandlers');
+const notificationHandlers = require('./socketHandlers/notificationHandlers');
 
 
 let io;
@@ -35,6 +36,7 @@ exports.init = (server) => {
 
         taskHandlers(io, socket);
         userHandlers(io, socket);
+        notificationHandlers(io, socket);
 
 
         socket.on("disconnect", (reason) => {

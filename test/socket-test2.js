@@ -13,9 +13,13 @@ const client = io('http://localhost:3000',{
 client.on('connect', () => {
     console.log(client.id);
 // to boogie
-    client.emit("chat_user", {receiverId: "690f12dfd91547b6f82c1d2a", chat: "hello Boogie!"});
+    client.emit("get_notifications");
+})
+
+client.on('get_request', (data) => {
+    console.log(data);
 })
 
 client.on('error', (error) => {
-    console.log(`error: ${error}`);
+    console.log(`error: ${JSON.stringify(error)}`);
 });
