@@ -1,21 +1,21 @@
-//const { io } = require('socket.io-client');
+const { io } = require('socket.io-client');
 
 
-//const JWT_TOKEN = <jwt-token>
+const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MGYxMmRmZDkxNTQ3YjZmODJjMWQyYSIsImVtYWlsIjoibGFrZUBsYWtlbWFpbC5jb20iLCJmaXJzdF9uYW1lIjoibGFrZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzY2MzE4NTg2LCJleHAiOjE3NjY0MDQ5ODZ9.bt2EzRMfGyc_Y5hErs8Vx5gEnozgVuVe99T9duojI8I'
 
 
-// const client = io('http://localhost:3000',{
-//     auth: {
-//         token: `Bearer ${JWT_TOKEN}`
-//     }
-// });
+const client = io('http://localhost:3000',{
+    auth: {
+        token: `Bearer ${JWT_TOKEN}`
+    }
+});
 
-// client.on('connect', () => {
-//     console.log(client.id);
+client.on('connect', () => {
+    console.log(client.id);
 
 
-//     // client.emit(...)
-// });
+    // client.emit(...)
+});
 
 
 // client.on('chat_user', (data) => {

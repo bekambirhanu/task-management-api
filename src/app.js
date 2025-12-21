@@ -8,6 +8,7 @@ const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
 const { timeout } = require('./Server');
 const { rateLimiter } = require('./middleware/rateLimit');
+const notification_router = require('./routes/notification');
 
 const app = express();
 
@@ -29,7 +30,8 @@ app.use('/api', routeAuth);
 // Task crud operation endpoint
 app.use('/api', routeCRUD);
 
-// Real time endpoint
+// Notification endpoints
+app.use('/api/notifications', notification_router)
 
 // Database connection
 try{

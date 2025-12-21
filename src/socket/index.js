@@ -62,3 +62,22 @@ exports.getIO = () => {
     }
     return io;
 };
+
+
+exports.emitToUser = (userId, event, data) => {
+    if(io){
+        io.to(`user_${userId}`).emit(event, data);
+    }
+};
+
+exports.emitToTask = (taskId, event, data) => {
+    if(io){
+        io.to(`task_${taskId}`).emit(event, data);
+    }
+};
+
+exports.emitToRole = (role, event, data) => {
+    if(io){
+        io.to(`role_${role}`).emit(event, data);
+    }
+};

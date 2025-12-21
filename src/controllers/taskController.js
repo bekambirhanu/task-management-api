@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const Task = require("../models/Task");
 const User = require("../models/User");
+const NotificationSerivice = require("../services/NotificationSerivices")
 
 exports.createTask = async (req, res) => {
     //validate data
@@ -9,7 +10,7 @@ exports.createTask = async (req, res) => {
 
 try{
         const data = req.body;
-        const userId = req.user.id;
+        const issuedUserId = req.user.id;
 
         const valid_data = {
             title: data.title,
@@ -17,25 +18,30 @@ try{
             status: data.status,
             priority: data.priority || 'medium',
             dueDate: data.dueDate || undefined,
-            createdBy: userId,
+            createdBy: issuedUserId,
             assignedTo: data.assignedTo || undefined
         }
         const new_task = new Task(valid_data);
 
         await new_task.save();
+        // notify all the assigned users if any
+        if(new_task.assignedTo && new_task.assignedTo.length > 0) {
+            new_task.assignedTo.forEach(async user_id => {
+                NotificationSerivice.notifyTaskAssigned(user_id, new_task, req.user.first_name);
+            })
+        }
         return res.status(200).json({ success: true, message: "task created successfully", data: new_task })
     } catch(error) {
         console.log(error);
         res.status(500).json({success: false, error: error});
     }
-
-
 };
 
 
 // get a list of tasks for only those that are authorized
 exports.getTask = async (req, res) => {
     try {
+        // Data filtering
         const {
             status,
             priority,
@@ -76,7 +82,6 @@ exports.getTask = async (req, res) => {
                                 .sort({createdAt: -1})
                                 .skip(options.skip)
                                 .limit(options.limit)
-        console.log("here")
          return res.status(200).send(data);
 
     } catch(error) {
@@ -101,9 +106,21 @@ exports.modifyTask = async (req, res) => {
         if(requestData[element]) valid_data[element] = requestData[element];
     });
 
-    try {    await Task.findByIdAndUpdate(targetId, valid_data).then((result) => {
-                res.status(200).json({success: true, message: "task modified successfully", data: result});
-            });
+    try {    
+            const new_task = await Task.findByIdAndUpdate(targetId, valid_data);
+
+            if(!new_task) return res.status(500).json({success: false, message: "Internal Error: request unsuccessfully"});
+            // Notify users
+            NotificationSerivice.notifyTaskUpdated(req.user.id, result, req.user.id, valid_data);
+
+            if(new_task.assignedTo && new_task.assignedTo.length > 0){
+                new_task.assignedTo.forEach(async user => {
+                    NotificationSerivice.notifyTaskUpdated(user, new_task, req.user.first_name, valid_data);
+                });
+            }
+
+            res.status(200).json({success: true, message: "task modified successfully"});
+
         } catch(error) {
             console.log({Error: error});
             res.status(500).json({success: false, message: "Internal server error"});
@@ -123,28 +140,28 @@ exports.deleteTask = async (req, res) => {
     } catch(error) {
         console.log(error);
         return res.status(500).json({success: false, message: 'Internal server error'});
-    } 
+    }
 
 
 }
 
-// Assign/ Deassign Operation
+// Assign/Deassign Operation
 exports.assignDeassignTask = async (req, res) => {
 
-    //validate the taskId and the userId from the query
+    //validate the taskId and the issuedUserId from the query
     const error = validationResult(req);
     if(!error.isEmpty()) return res.status(400).json({success: false, error: error.array()});
 
 
     const taskId = req.query.taskId;
-    const userId = req.query.userId;
+    const issuedUserId = req.query.userId;
     const type = req.query.type || "assign";
 
     try{
         // check if the task and the user exists
         const task = await Task.findOne({_id: taskId});
-        const user = await User.findOne({_id: userId});
-        const isAssignedAlready = task.assignedTo.includes(userId);
+        const user = await User.findOne({_id: issuedUserId});
+        const isAssignedAlready = task.assignedTo.includes(issuedUserId);
 
         if(!user || !task) return res.status(400).json({success: false, message: 'update failed. unknown task or user!'});
 
@@ -153,24 +170,36 @@ exports.assignDeassignTask = async (req, res) => {
             if(!isAssignedAlready) return res.status(404).json({success: false, message: "User is not assigned"});
             await Task.updateOne(
                 {_id: taskId}, 
-                {$pull: {assignedTo: userId}}
-            ).then((result) => {
+                {$pull: {assignedTo: issuedUserId}}
+            ).then((result, err) => {
+                if(err) return res.status(500).json({success: false, message: "Internal Error: request unsuccessfully"});
+
+                // Notify IssuedUser
+                NotificationSerivice.createAndSend({
+                    user: issuedUserId,
+                    type: 'mension',
+                    title: "Deassigned from task",
+                    message: `You have been deassigned from task: ${task.title}`,
+                    data: {
+                        taskId: task._id,
+                        deassignedBy: req.user.first_name,
+                        priority: task.priority
+                    },
+                    relatedTask: task._id
+                });
+
                 return res.status(200).json({success: true, message: "user deassigned successfully"});
             });
         };
 
-
-
-
-
-
-
         if(isAssignedAlready) return res.status(400).json({success: false, message: 'update failed. User is already assigned!'});
 
-            await Task.updateOne({_id: taskId}, { $addToSet: { assignedTo: { $each: [ userId ] } } }, {new: true}).then((result) => {
+           const updated_task = await Task.updateOne({_id: taskId}, { $addToSet: { assignedTo: { $each: [ issuedUserId ] } } }, {new: true});
+           // Notify User
+            if(updated_task.acknowledged){
+                NotificationSerivice.notifyTaskAssigned(issuedUserId, task, user.first_name);
                 return res.status(200).json({success: true, message: 'Task successfully updated', data: result});
-            });
-
+           }
         return res.status(404).json({success: false, message: 'Task Not found'});
     } catch(error) {
         console.log(error);
@@ -194,6 +223,6 @@ exports.bulkTask = async (req, res) => {
 
 }catch(error) {
     console.log(error);
-    res.status(500).send("migration failed");
+    res.status(500).send("Internal Error: migration failed");
 }
 }
