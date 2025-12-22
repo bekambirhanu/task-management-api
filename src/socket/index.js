@@ -4,6 +4,7 @@ const { socketAuth } = require('./middleware/socketAuth');
 const taskHandlers = require('./socketHandlers/taskHandlers');
 const userHandlers = require('./socketHandlers/userHandlers');
 const notificationHandlers = require('./socketHandlers/notificationHandlers');
+const presenceHandlers = require('./socketHandlers/presenceHandlers');
 
 
 let io;
@@ -37,6 +38,7 @@ exports.init = (server) => {
         taskHandlers(io, socket);
         userHandlers(io, socket);
         notificationHandlers(io, socket);
+        presenceHandlers(io, socket);
 
 
         socket.on("disconnect", (reason) => {
@@ -58,7 +60,7 @@ exports.init = (server) => {
 
 exports.getIO = () => {
     if(!io) {
-        throw new Error("Socket.io not initialized! Call init() first");
+        throw new Error("Socket not initialized! Call init() first");
     }
     return io;
 };

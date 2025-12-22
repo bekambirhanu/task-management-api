@@ -2,7 +2,7 @@ const User = require('../models/User');
 const VerifyEmail = require('../models/VerifyEmail');
 const { validationResult } = require('express-validator');
 const { generate_token } = require('../utils/jwt');
-const { generateRandomString } = require('../utils/key_generator');
+const KeyGenerator = require('../utils/key_generator');
 const EmailService = require('../services/emailServices');
 const { JWT_SECRET_TOKEN } = require('../../envVars');
 const { timeDifference } = require('../utils/time_difference');
@@ -25,7 +25,7 @@ exports.emailVerify = async (req, res) => {
             return res.status(400).json({success: false, message: "email already exists"});
 
         // generate the key
-        const verify_key = generateRandomString();
+        const verify_key = KeyGenerator.generateRandomString();
 
         await EmailService.verifyEmail(email,verify_key).then(async (result) => {
             if(result.accepted[0] !== email)
@@ -192,7 +192,7 @@ exports.sendRecoveryPassword = async (req, res) => {
 
         if(!existingUser) return res.status(403).json({success: false, message: "User with provided email doesn't exist"});
         
-        const recoveryKey = generateRandomString();
+        const recoveryKey = KeyGenerator.generateRandomString();
 
         await EmailService.sendPasswordReset(email, existingUser.first_name, recoveryKey);
 

@@ -1,7 +1,9 @@
 const { validationResult } = require("express-validator");
 const Task = require("../models/Task");
 const User = require("../models/User");
-const NotificationSerivice = require("../services/NotificationSerivices")
+const NotificationSerivice = require("../services/NotificationSerivices");
+const { getIO, emitToTask } = require("../socket");
+const { Socket } = require("socket.io");
 
 exports.createTask = async (req, res) => {
     //validate data
@@ -82,8 +84,15 @@ exports.getTask = async (req, res) => {
                                 .sort({createdAt: -1})
                                 .skip(options.skip)
                                 .limit(options.limit)
-         return res.status(200).send(data);
 
+            const io = getIO();
+
+            io.to(`task_${data._id}`).emit('user_viewing', {
+                userId: req.user.id,
+                action: 'viewing'
+            });
+         return res.status(200).send(data);
+        
     } catch(error) {
         console.log(error);
         res.status(500).json({ success: false, error: error });
@@ -110,6 +119,13 @@ exports.modifyTask = async (req, res) => {
             const new_task = await Task.findByIdAndUpdate(targetId, valid_data);
 
             if(!new_task) return res.status(500).json({success: false, message: "Internal Error: request unsuccessfully"});
+            io.to(`task_${new_task._id}`).emit('task_updated', {
+                task: new_task,
+                updatedBy: req.user.id,
+                changes: valid_data,
+                timestamp: new Date()
+            });
+
             // Notify users
             NotificationSerivice.notifyTaskUpdated(req.user.id, result, req.user.id, valid_data);
 
@@ -118,12 +134,14 @@ exports.modifyTask = async (req, res) => {
                     NotificationSerivice.notifyTaskUpdated(user, new_task, req.user.first_name, valid_data);
                 });
             }
+            const io = getIO();
 
-            res.status(200).json({success: true, message: "task modified successfully"});
+
+            return res.status(200).json({success: true, message: "task modified successfully"});
 
         } catch(error) {
             console.log({Error: error});
-            res.status(500).json({success: false, message: "Internal server error"});
+            return res.status(500).json({success: false, message: "Internal server error"});
         }
 
 };
@@ -134,7 +152,7 @@ exports.deleteTask = async (req, res) => {
     try {
         if(req.task) {
             await Task.findByIdAndDelete(req.task._id).exec();
-            return res.status(200).json({success: true, message: 'task deleted successfully'})
+            return res.status(200).json({success: true, message: 'task deleted successfully'});
             
         }
     } catch(error) {
@@ -201,14 +219,35 @@ exports.assignDeassignTask = async (req, res) => {
                 return res.status(200).json({success: true, message: 'Task successfully updated', data: result});
            }
         return res.status(404).json({success: false, message: 'Task Not found'});
+
+        
     } catch(error) {
         console.log(error);
         res.status(500).json({success: false, message: 'Internal server error'});
     }
 }
 
-// Deassign
+exports.updateTypingStatus = async (req, res) => {
+    const { taskId, isTyping } = req.body;
+    const userId = req.user.id;
 
+    try{
+
+        const io = getIO();
+        
+        io.to(`task_${taskId}`).emit('user_typing', {
+            userId: userId,
+            isTyping: isTyping,
+            timestamp: new Date()
+        });
+
+        return res.status(200).json({success: true, message: "status updated successfully"})
+
+    } catch(error) {
+        console.log(error);
+        return res.status(500).json({success: false, message: "Internal Error"});
+    }
+}
 
 // Bulk data migration controller
 exports.bulkTask = async (req, res) => {
