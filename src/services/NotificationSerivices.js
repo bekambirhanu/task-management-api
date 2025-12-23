@@ -1,5 +1,6 @@
 const Notification = require('../models/Notification');
-const { getIO, emitToUser, emitToRole } = require('../socket/index');
+const { getIO, emitToUser } = require('../socket/index');
+const EmitEvents = require('../socket/socket_events/EmitEvents');
 
 
 class NotificationService {
@@ -18,7 +19,7 @@ class NotificationService {
             }
             emitToUser(
                 new_notification.user._id,
-                'new_notification',
+                EmitEvents.NEW_NOTIFICATION,
                 new_notification
             );
 
@@ -77,7 +78,7 @@ class NotificationService {
     static async markAsRead(notificationId) {
 
         await Notification.findByIdAndUpdate(notificationId, {read: true});
-        
+
     }
 };
 

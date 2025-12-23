@@ -1,3 +1,5 @@
+const EmitEvents = require('../socket/socket_events/EmitEvents');
+
 class PresenceService {
     constructor() {
         this.onlineUsers = new Map(); // userId -> []
@@ -55,7 +57,7 @@ class PresenceService {
     broadcastPresenceChange(userId, status) {
         const io = require('../socket/index').getIO();
         if(io) {
-            io.emit('presence_change', {
+            io.emit(EmitEvents.PRESENCE_CHANGE, {
                 user: userId,
                 status,
                 timestamp: new Date()

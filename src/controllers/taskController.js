@@ -2,8 +2,9 @@ const { validationResult } = require("express-validator");
 const Task = require("../models/Task");
 const User = require("../models/User");
 const NotificationSerivice = require("../services/NotificationSerivices");
-const { getIO, emitToTask } = require("../socket");
+const { getIO } = require("../socket");
 const { Socket } = require("socket.io");
+const EmitEvents = require("../socket/socket_events/EmitEvents");
 
 exports.createTask = async (req, res) => {
     //validate data
@@ -87,7 +88,7 @@ exports.getTask = async (req, res) => {
 
             const io = getIO();
 
-            io.to(`task_${data._id}`).emit('user_viewing', {
+            io.to(`task_${data._id}`).emit(EmitEvents.USER_VIEWING, {
                 userId: req.user.id,
                 action: 'viewing'
             });
@@ -119,7 +120,7 @@ exports.modifyTask = async (req, res) => {
             const new_task = await Task.findByIdAndUpdate(targetId, valid_data);
 
             if(!new_task) return res.status(500).json({success: false, message: "Internal Error: request unsuccessfully"});
-            io.to(`task_${new_task._id}`).emit('task_updated', {
+            io.to(`task_${new_task._id}`).emit(EmitEvents.TASK_UPDATE, {
                 task: new_task,
                 updatedBy: req.user.id,
                 changes: valid_data,
@@ -235,7 +236,7 @@ exports.updateTypingStatus = async (req, res) => {
 
         const io = getIO();
         
-        io.to(`task_${taskId}`).emit('user_typing', {
+        io.to(`task_${taskId}`).emit(EmitEvents.USER_TYPING, {
             userId: userId,
             isTyping: isTyping,
             timestamp: new Date()

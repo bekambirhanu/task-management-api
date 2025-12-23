@@ -1,8 +1,10 @@
-const Task = require('../../models/Task')
+const Task = require('../../models/Task');
+const EmitEvents = require('../socket_events/EmitEvents');
+const ListenEvents = require('../socket_events/ListenEvents');
 
 module.exports = async (io, socket) => {
 
-    socket.on('chat_user',async (data) => {
+    socket.on(ListenEvents.USER_MESSAGE,async (data) => {
         const {
              receiverId,
              chat,
@@ -18,16 +20,16 @@ module.exports = async (io, socket) => {
         const areInTask = task? task.assignedTo.includes(receiverId) && task.assignedTo.includes(socket.userId): false;
 
         if(isAdmin || areInTask)
-            { await io.to(`user_${receiverId}`).emit('chat_user', JSON.stringify({sender: `${socket.userRole}_${socket.first_name}`,message: chat})); }
+            { await io.to(`user_${receiverId}`).emit(EmitEvents.CHAT_USER, JSON.stringify({sender: `${socket.userRole}_${socket.first_name}`,message: chat})); }
 
         else if(isManager && isInTheirTask)
-            { await io.to(`user_${receiverId}`).emit('chat_user', {"sender": `${socket.userRole}_${socket.first_name}`,"message": chat}); console.log('manager') }
+            { await io.to(`user_${receiverId}`).emit(EmitEvents.CHAT_USER, {"sender": `${socket.userRole}_${socket.first_name}`,"message": chat}); console.log('manager') }
         
         else {
             if(!task)
-                { await io.to(`user_${socket.userId}`).emit('error', "couldn't find task"); console.log('no task') }
+                { await io.to(`user_${socket.userId}`).emit(EmitEvents.ERROR, "couldn't find task"); console.log('no task') }
             else
-                { await io.to(`user_${socket.userId}`).emit('error', JSON.stringify({error:'forbiden to chat with person in different task'})); console.log('forbidden') }
+                { await io.to(`user_${socket.userId}`).emit(EmitEvents.ERROR, JSON.stringify({error:'forbiden to chat with person in different task'})); console.log('forbidden') }
         }
 
     });

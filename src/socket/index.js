@@ -5,6 +5,7 @@ const taskHandlers = require('./socketHandlers/taskHandlers');
 const userHandlers = require('./socketHandlers/userHandlers');
 const notificationHandlers = require('./socketHandlers/notificationHandlers');
 const presenceHandlers = require('./socketHandlers/presenceHandlers');
+const ListenEvents = require('./socket_events/ListenEvents');
 
 
 let io;
@@ -25,7 +26,7 @@ exports.init = (server) => {
     io.use(socketAuth);
     
 
-    io.on("connection", (socket) => {
+    io.on(ListenEvents.CONNECTION, (socket) => {
         console.log(`User ${socket.userId} connected (Socket: ${socket.id})`);
 
         
@@ -41,13 +42,9 @@ exports.init = (server) => {
         presenceHandlers(io, socket);
 
 
-        socket.on("disconnect", (reason) => {
+        socket.on(ListenEvents.DISCONNECT, (reason) => {
             console.error(`socket error for user ${socket.userId}`, reason);
         });
-
-        socket.on('error', (error) => {
-            console.error(`Socket error for user ${socket.userId}`, error);
-        })
         
     });
 

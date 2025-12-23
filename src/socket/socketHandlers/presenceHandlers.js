@@ -1,15 +1,17 @@
 const PresenceService = require('../../services/PresenceServices');
+const EmitEvents = require('../socket_events/EmitEvents');
+const ListenEvents = require('../socket_events/ListenEvents');
 
 
 module.exports = (io, socket) => {
     
     PresenceService.userConnected(socket.userId, socket.id);
 
-    socket.on('update_activity', (activities) => {
+    socket.on(ListenEvents.UPDATE_ACTIVITY, (activities) => {
         PresenceService.updateActivities(activities, socket.userId);
         
         if(activities.currentTask) {
-            socket.broadcast.to(`task_${activities.currentTask}`).emit('update_activity', {
+            socket.broadcast.to(`task_${activities.currentTask}`).emit(EmitEvents.ACTIVITY_UPDATE, {
                 userId: socket.userId,
                 activity: activities.type,
                 timestamp: new Date()
@@ -19,17 +21,17 @@ module.exports = (io, socket) => {
     });
 
 
-    socket.on('get_online_users', () => {
+    socket.on(ListenEvents.GET_ONLINE_USERS, () => {
         const online_users = PresenceService.getOnlineUsers();
 
-        socket.emit('online_users', {users: online_users});
+        socket.emit(EmitEvents.ONLINE_USERS, {users: online_users});
     });
 
-    socket.on('check_user_status', (userId) => {
+    socket.on(ListenEvents.CHECK_USER_STATUS, (userId) => {
         const isOnline = PresenceService.isUserOnline(userId);
         const activities = PresenceService.getUserActivities(userId);
 
-        socket.to(`user_${socket.userId}`).emit('user_status', {
+        socket.to(`user_${socket.userId}`).emit(EmitEvents.USER_STATUS, {
             userId: userId,
             isOnline: isOnline,
             activities: activities
@@ -37,7 +39,7 @@ module.exports = (io, socket) => {
     });
 
 
-    socket.on('disconnect', () => {
+    socket.on(ListenEvents.DISCONNECT, () => {
         PresenceService.userDisconnected(socket.id, socket.userId);
     });
 }

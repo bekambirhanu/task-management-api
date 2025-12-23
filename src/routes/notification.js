@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const { protectedRoute } = require('../middleware/auth');
 const NotificationService = require('../services/NotificationSerivices');
-const Notification = require('../models/Notification')
+const Notification = require('../models/Notification');
+const EmitEvents = require('../socket/socket_events/EmitEvents');
 
 // Get user notifications
 router.get('/', protectedRoute, async (req, res) => {
@@ -54,7 +55,7 @@ router.patch('/read-all', protectedRoute, async (req, res) => {
         
         // Notify client via socket
         const io = require('../sockets').getIO();
-        io.to(`user_${req.user.id}`).emit('all_notifications_read');
+        io.to(`user_${req.user.id}`).emit(EmitEvents.ALL_NOTIFICATIONS_READ, "all notifications marked as read");
         
         res.json({
             success: true,
