@@ -8,10 +8,10 @@ const ListenEvents = require("../socket_events/ListenEvents");
 module.exports = (io, socket) => {
 
     socket.on(ListenEvents.JOIN_TASK, async (taskId) => {
-        const task_id = typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id;
+        const task_id = taskId? typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id: undefined;
 
         try {
-            if(!task_id) {await io.to(socket.id).emit(EmitEvents.JOIN_REQUEST, {'message': 'no task provided!'})};
+            if(!task_id) { return await io.to(socket.id).emit(EmitEvents.JOIN_REQUEST, {'message': 'no task provided!'})};
 
             const task = await Task.findById(task_id);
 
@@ -40,7 +40,7 @@ module.exports = (io, socket) => {
 
 
     socket.on(ListenEvents.LEAVE_TASK, async (taskId) => {
-        const task_id = typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id;
+        const task_id = taskId?typeof(taskId) === String? JSON.parse(taskId).task_id: taskId.task_id: undefined;
 
         await socket.leave(`task_${task_id}`);
         console.log(`User ${socket.userId} left room task_${task_id}`);
@@ -50,7 +50,7 @@ module.exports = (io, socket) => {
     // Task create event
     socket.on(ListenEvents.CREATE_TASK, async (taskData) => {
         await io.to(`user_${socket.userId}`).emit(EmitEvents.CREATE_REQUEST, {message: "creating task ..."});
-        const task_data = taskData?typeof(taskData) === String? JSON.parse(taskData): taskData: null
+        const task_data = taskData?typeof(taskData) === String? JSON.parse(taskData): taskData: undefined;
         console.log(task_data);
         if(!task_data) return await io.to(`user_${socket.userId}`).emit(EmitEvents.CREATE_REQUEST, {success: false, message: "invalid task data"});
         if(task_data.assignedTo.length > 0 && socket.userRole === 'user')

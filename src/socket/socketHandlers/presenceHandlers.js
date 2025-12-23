@@ -28,11 +28,13 @@ module.exports = (io, socket) => {
     });
 
     socket.on(ListenEvents.CHECK_USER_STATUS, (userId) => {
-        const isOnline = PresenceService.isUserOnline(userId);
-        const activities = PresenceService.getUserActivities(userId);
-
-        socket.to(`user_${socket.userId}`).emit(EmitEvents.USER_STATUS, {
-            userId: userId,
+        if(!userId.user_id) return socket.to(`user_${socket.userId}`).emit(EmitEvents.ERROR, {
+            "message": "user not provided"
+        });
+        const isOnline = PresenceService.isUserOnline(userId.user_id);
+        const activities = PresenceService.getUserActivity(userId.user_id) || "None";
+        io.to(`user_${socket.userId}`).emit(EmitEvents.USER_STATUS, {
+            userId: userId.user_id,
             isOnline: isOnline,
             activities: activities
         });

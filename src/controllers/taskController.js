@@ -3,7 +3,6 @@ const Task = require("../models/Task");
 const User = require("../models/User");
 const NotificationSerivice = require("../services/NotificationSerivices");
 const { getIO } = require("../socket");
-const { Socket } = require("socket.io");
 const EmitEvents = require("../socket/socket_events/EmitEvents");
 
 exports.createTask = async (req, res) => {
@@ -128,11 +127,11 @@ exports.modifyTask = async (req, res) => {
             });
 
             // Notify users
-            NotificationSerivice.notifyTaskUpdated(req.user.id, result, req.user.id, valid_data);
+            NotificationSerivice.notifyTaskUpdated(req.user.id, new_task, req.user.id, valid_data);
 
             if(new_task.assignedTo && new_task.assignedTo.length > 0){
                 new_task.assignedTo.forEach(async user => {
-                    NotificationSerivice.notifyTaskUpdated(user, new_task, req.user.first_name, valid_data);
+                    NotificationSerivice.notifyTaskUpdated(user, new_task, req.user.id, valid_data);
                 });
             }
             const io = getIO();

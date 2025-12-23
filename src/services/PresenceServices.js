@@ -8,12 +8,13 @@ class PresenceService {
 
 
     userConnected(userId, socketId) {
-        if(!this.onlineUsers.has(userId)) {
-            this.onlineUsers.set(userId, []);
+        const user_id = userId?.toString();
+        if(!this.onlineUsers.has(user_id)) {
+            this.onlineUsers.set(user_id, []);
         }
-            this.onlineUsers.get(userId).push(socketId);
+            this.onlineUsers.get(user_id).push(socketId);
             
-            console.log(`users: online: ${this.onlineUsers.size}`)
+            console.log(`users online: ${this.onlineUsers.size}`)
     }
 
     userDisconnected(socketId, userId) {
@@ -35,7 +36,7 @@ class PresenceService {
     }
 
     updateActivities(activities, userId) {
-        this.userActivities.set(userId, {
+        this.userActivities.set(userId.toString(), {
             ...activities,
             lastActivity: new Date()
         });

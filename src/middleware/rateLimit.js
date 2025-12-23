@@ -3,7 +3,6 @@ const { timeDifference } = require('../utils/time_difference');
 
 exports.rateLimiter = async (req, res, next) => {
     const ip_address = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
     if(!ip_address) return res.status(400).json({message: "ip not found!"});
 
     const user_count = await RateCounter.findOne({ip_address: ip_address});
