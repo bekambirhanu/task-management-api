@@ -49,10 +49,34 @@ const taskSchema = new Schema({
         type: [Schema.Types.ObjectId],
         ref: 'User',
         unique: true
+    },
+
+    attachments: [{
+        filename: String,
+        originalName: String,
+        mimeType: String,
+        size: Number,
+        url: String,
+        uploadedBy: {
+            type: mongoose.Types.ObjectId,
+            ref: 'User',
+        },
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+
+    totalStorageUsed: {
+        type: Number,
+        default: 0
     }
+
 },{
     timestamps: true
 });
+
+taskSchema.static.MAX_STORAGE_PER_TASK = 100*1024*1024; // 100MB
 
  const Task = mongoose.model( 'Task', taskSchema);
  module.exports = Task;

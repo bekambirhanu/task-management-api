@@ -3,7 +3,7 @@ const ListenEvents = require('../src/socket/socket_events/ListenEvents');
 const EmitEvents = require('../src/socket/socket_events/EmitEvents');
 const { json } = require('express');
 // lake
-const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MGYxMmRmZDkxNTQ3YjZmODJjMWQyYSIsImVtYWlsIjoibGFrZUBsYWtlbWFpbC5jb20iLCJmaXJzdF9uYW1lIjoibGFrZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzY2NDc1NTEzLCJleHAiOjE3NjY1NjE5MTN9.i0Fv2UzW0gz07dbakvCbISD_PDicS_tswL6WHUHn6uQ'
+const JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTMzYTM0YmU5NWMzMWNhYWFlMDQxNSIsImVtYWlsIjoiYWRtaW5AYWRtaW5tYWlsLmNvbSIsImZpcnN0X25hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NjU4NTI1OSwiZXhwIjoxNzY2NjcxNjU5fQ.LmdtjfgBVR9JdSU2hKLtugqEnYnnY7UjYqd6w61WpN0'
 
 
 // admin: 69133a34be95c31caaae0415
@@ -19,9 +19,9 @@ client.on('connect', async() => {
 
     client.emit(ListenEvents.JOIN_TASK, {task_id: "694a915d69fc7a280312801e"} );
 
-    client.emit(ListenEvents.CHECK_USER_STATUS, {user_id: "69133acabe95c31caaae0418"})
+    // client.emit(ListenEvents.CHECK_USER_STATUS, {user_id: "69133acabe95c31caaae0418"})
 
-    client.emit(ListenEvents.GET_ONLINE_USERS);
+    // client.emit(ListenEvents.GET_ONLINE_USERS);
 
 
 });
@@ -70,5 +70,5 @@ client.on(EmitEvents.CHAT_USER, (data) => {
 // });
 
 client.on(EmitEvents.ERROR, (error) => {
-    console.log(`error: ${JSON.stringify(error)}`);
+    console.log(error);
 });

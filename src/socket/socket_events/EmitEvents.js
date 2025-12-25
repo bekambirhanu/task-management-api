@@ -17,6 +17,8 @@ class EmitEvents {
     static TASK_UPDATE =  'task_update';
     static DELETE_REQUEST =  'delete_request';
     static NEW_NOTIFICATION = 'new_notification';
+    static FILE_UPLOADED = 'file_uploaded';
+    static FILE_DELETE = 'file_delete';
 }
 
 module.exports = EmitEvents;
