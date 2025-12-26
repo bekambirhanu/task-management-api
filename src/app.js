@@ -9,6 +9,8 @@ const routeCRUD = require('./routes/task');
 const { timeout } = require('./Server');
 const { rateLimiter } = require('./middleware/rateLimit');
 const notification_router = require('./routes/notification');
+const fileRoute = require('./routes/uploads');
+const path = require('path');
 
 const app = express();
 
@@ -24,14 +26,16 @@ app.use(express.json());
 // To check rate limiting
 app.use(rateLimiter);
 
-// Authentication endpoint
-app.use('/api', routeAuth);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Task crud operation endpoint
 app.use('/api', routeCRUD);
 
+// Authentication endpoint
+app.use('/api', routeAuth);
+
 // Notification endpoints
-app.use('/api/notifications', notification_router)
+app.use('/api/notifications', notification_router);
 
 // Database connection
 try{
