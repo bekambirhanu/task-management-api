@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 const EmitEvents = require('../socket/socket_events/EmitEvents');
-const { timeStamp } = require('console');
 
 
 class FileUploadServices {
@@ -42,9 +41,16 @@ class FileUploadServices {
             else {
                 cb(new Error('invalid file format'), false);
             }
-
-        }
-    };
+        };
+        this.upload = multer({
+            storage: this.storage,
+            fileFilter: this.fileFilter,
+            limits: {
+                fileSize: 10 * 1024 * 1024, // 10MB per file
+                files: 10 // Max 10 files per request
+            }
+        });
+    }
 
         // check storage limit
     async checkStorageLimit(taskId, fileSize) {
@@ -60,11 +66,13 @@ class FileUploadServices {
     async uploadToCloud(filePath, originalName, mimeType) {
         // For now, we'll use local storage
         // In production, replace with AWS S3, Google Cloud Storage, etc.
+
         
+        console.log('uploadToCloud');
         return {
             filename: path.basename(filePath),
-            originalName,
-            mimeType,
+            oritinalName: originalName,
+            mimeType: mimeType,
             size: (await fs.stat(filePath)).size,
             url: `/uploads/${path.basename(path.dirname(filePath))}/${path.basename(filePath)}`,
             localPath: filePath
@@ -74,79 +82,77 @@ class FileUploadServices {
     // Process upload
     async processUpload(req, res) {
         return new Promise((resolve, reject) => {
-            this.upload.array('attachement', 10)(req, res, async (error) => {
-                if(error) {
-                    reject(error);
+            this.upload.array('attachments', 10)(req, res, async (err) => {
+                if (err) {
+                    return reject(err);
                 }
-
+                
                 try {
                     const taskId = req.params.task_id;
-                    const uploadedBy = req.user.id;
+                    const uploadedBy = req.user.userId;
                     const processedFiles = [];
-
-                    for(const file in req.files) {
-
+                    console.log(req.files)
+                    for (const file of req.files) {
+                        // Check storage limit
                         await this.checkStorageLimit(taskId, file.size);
-
+                        
+                        // Process file (in production: upload to cloud)
                         const fileInfo = await this.uploadToCloud(
                             file.path,
-                            file.originalname, 
+                            file.originalname,
                             file.mimetype
                         );
-
-                        // Add to Task
-
-                        const task = await Task.findByIdAndUpdate(taskId, {
-
-                            $push: {
-                                attachments: {
-                                    ...fileInfo,
-                                    uploadedBy
+                        
+                        // Add to task
+                        await Task.findByIdAndUpdate(
+                            taskId,
+                            {
+                                $push: {
+                                    attachments: {
+                                        ...fileInfo,
+                                        uploadedBy
+                                    }
+                                },
+                                $inc: {
+                                    totalStorageUsed: file.size
                                 }
                             },
-                            $inc: {
-                                totalStorageUsed: file.size
-                            }
-
-                        },
-
-                        {new: true}
-                    ).populate('attachments.uploadedBy', 'first_name last_name');
-
-                    processedFiles.push(fileInfo);
-
-                    // Real time notifications
-                    const io = require('../socket/index').getIO();
-                    io.to(`task_${taskId}`).emit(EmitEvents.FILE_UPLOADED, {
-                        file: fileInfo,
-                        uploadedBy,
-                        taskId,
-                        timeStamp: new Date()
-                    });
+                            { new: true }
+                        ).populate('attachments.uploadedBy', 'first_name last_name');
+                        
+                        processedFiles.push(fileInfo);
+                        
+                        // Real-time notification
+                        const io = require('../socket/index').getIO();
+                        io.to(`task_${taskId}`).emit('file_uploaded', {
+                            file: fileInfo,
+                            uploadedBy,
+                            taskId,
+                            timestamp: new Date()
+                        });
                     }
-
-                resolve(processedFiles);
-
-
+                    
+                    resolve(processedFiles);
                 } catch (error) {
-
+                    // Cleanup uploaded files on error
                     if (req.files) {
                         req.files.forEach(file => {
                             fs.unlink(file.path).catch(() => {});
                         });
-                    };
+                    }
                     reject(error);
-                };
-
+                }
             });
-        })
-    };
+        });
+    }
 
     // Delete file
     async deleteFile(taskId, fileId) {
         const task = await Task.findById(taskId);
-        const file = task.attachments.id(fileId);
-        
+        const file = task.attachments.find(element => element._id.toString() === fileId.toString());
+
+        // console.log(task.attachments.find(element => element._id.toString() === "6953c57b23361207b27048df"))
+        // console.log(fileId, task.attachments[1]._id.toString())
         if (!file) {
             throw new Error('File not found');
         }
@@ -162,16 +168,16 @@ class FileUploadServices {
         await task.save();
         
         // Real-time notification
-        const io = require('../sockets').getIO();
+        const io = require('../socket/index').getIO();
         io.to(`task_${taskId}`).emit(EmitEvents.FILE_DELETE, {
-            fileId,
-            taskId,
+            fileId: fileId,
+            taskId: taskId,
             timestamp: new Date()
         });
         
         return true;
-    }
+    };
     
-}
+};
 
 module.exports = new FileUploadServices();

@@ -5,14 +5,41 @@ const Task = require('../models/Task');
 const FileUploadServices = require('../services/FileUploadServices');
 
 
+// Get file
+fileRoute.get('/tasks/:task_id/file',
+    protectedRoute,
+    async (req, res) => {
+        try {
+
+            const task = await Task.findById(req.params.task_id, {attachments: 1, totalStorageUsed: 1})
+                                    .populate('attachments.uploadedBy', 'first_name last_name');
+
+            if (!task) return res.status(400).json({ success: false, message: error.message });
+
+            return res.status(200).json({
+                success: true,
+                totalStorageUsed: task.totalStorageUsed,
+                totalStorageLimit: task.MAX_STORAGE_PER_TASK,
+                file: task.attachments
+            });
+
+        } catch(error) {
+            console.log(error)
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+
+        }
+    });
+
 // Upload route
-fileRoute.post('/tasks/:task_id/upload', 
+fileRoute.post('/tasks/:task_id/upload',
     protectedRoute,
     canModifyTask,
     async (req, res) => {
     try {
-        const file = await FileUploadServices.processUpload(req, res);
-
+            const file = await FileUploadServices.processUpload(req, res);
             return res.status(200).json({
                 success: true,
                 message: 'file Uploaded successfuly',
@@ -20,6 +47,9 @@ fileRoute.post('/tasks/:task_id/upload',
                 file: file
             });
     } catch(error) {
+
+        console.log(error);
+
         return res.status(500).json({
             success: false,
             message: 'Internal Server Error. upload unsuccessful'
@@ -28,7 +58,7 @@ fileRoute.post('/tasks/:task_id/upload',
 });
 
 // Delete route
-fileRoute.delete('/tasks/:task_id/delete',
+fileRoute.delete('/tasks/:task_id/delete/:file_id',
     protectedRoute,
     canDeleteTask,
     async (req, res) => {
@@ -50,30 +80,5 @@ fileRoute.delete('/tasks/:task_id/delete',
         }
     });
 
-
-fileRoute.get('tasks/:task_id/files',
-    protectedRoute,
-    async (req, res) => {
-        try {
-
-            const task = await Task.findById(req.params.task_id, {attachments: 1, totalStorageUsed: 1})
-                                    .populate('attachments.uploadedBy', 'first_name last_name');
-            
-            return res.status(500).json({
-                success: true,
-                totalStorageUsed: task.totalStorageUsed,
-                totalStorageLimit: task.MAX_STORAGE_PER_TASK,
-                file: task.attachments
-            });
-
-        } catch(error) {
-            console.log(error)
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
-
-        }
-    });
 
     module.exports = fileRoute;

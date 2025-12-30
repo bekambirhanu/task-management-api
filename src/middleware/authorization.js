@@ -3,7 +3,7 @@ const Task = require('../models/Task');
 // Check if user can modify a task
 exports.canModifyTask = async (req, res, next) => {
     try {
-        const taskId = req.params.id;
+        const taskId = req.params.id || req.params.task_id;
         const userId = req.user.id;
         const userRole = req.user.role;
 
@@ -56,7 +56,7 @@ exports.canModifyTask = async (req, res, next) => {
 
 exports.canDeleteTask = async (req, res, next) => {
 
-    const taskId = req.params.id;
+    const taskId = req.params.id || req.params.task_id;
     const userId = req.user.id;
     const userRole = req.user.role;
 

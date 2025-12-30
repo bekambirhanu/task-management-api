@@ -6,17 +6,29 @@ const morgan = require('morgan');
 const { MONGODB_URI } = require('../envVars')
 const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
-const { timeout } = require('./Server');
-const { rateLimiter } = require('./middleware/rateLimit');
 const notification_router = require('./routes/notification');
 const fileRoute = require('./routes/uploads');
-const path = require('path');
 
 const app = express();
 
 // Middleware
 // For Protection of some HTTP attacks and better security config related to cors - headers
-app.use(helmet());
+// Security middleware for production only
+if (process.env.NODE_ENV === 'production') {
+  app.use(helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+    },
+  }));
+}
+else {
+  app.use(helmet());
+}
+
 // for allowance of cross origin issues
 app.use(cors());
 // To log requests and responses on the console
@@ -24,25 +36,28 @@ app.use(morgan('combined'));
 // To parse requests into json format for an efficient data handling
 app.use(express.json());
 // To check rate limiting
-app.use(rateLimiter);
+//app.use(rateLimiter);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Task crud operation endpoint
-app.use('/api', routeCRUD);
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Authentication endpoint
 app.use('/api', routeAuth);
 
+// Task crud operation endpoint
+app.use('/api', routeCRUD);
+
 // Notification endpoints
 app.use('/api/notifications', notification_router);
+
+// File Process endpoints
+app.use('/api', fileRoute);
 
 // Database connection
 try{
   mongoose.connect(MONGODB_URI);
 } catch(error) {
   if(error === mongoose.MongooseError) {
-    console.log(`Connection Error:\n ${error}`);
+    console.log(`MongoDB Connection Error:\n ${error}`);
   }
   else {
     console.log(error);

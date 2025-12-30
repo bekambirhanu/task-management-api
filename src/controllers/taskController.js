@@ -216,9 +216,9 @@ exports.assignDeassignTask = async (req, res) => {
            // Notify User
             if(updated_task.acknowledged){
                 NotificationSerivice.notifyTaskAssigned(issuedUserId, task, user.first_name);
-                return res.status(200).json({success: true, message: 'Task successfully updated', data: result});
+                return res.status(200).json({success: true, message: 'Task successfully updated'});
            }
-        return res.status(404).json({success: false, message: 'Task Not found'});
+        return res.status(404).json({success: false, message: 'Task Not found!'});
 
         
     } catch(error) {

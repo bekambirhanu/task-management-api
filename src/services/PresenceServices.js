@@ -29,9 +29,11 @@ class PresenceService {
 
             if(socket.length === 0) {
                 this.onlineUsers.delete(userId);
+
+                console.log(`user ${userId} is offline`);
+
             }
 
-            console.log(`user ${userId} is offline`);
         }
     }
 
