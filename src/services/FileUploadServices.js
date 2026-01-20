@@ -68,7 +68,7 @@ class FileUploadServices {
         // In production, replace with AWS S3, Google Cloud Storage, etc.
 
         
-        console.log('uploadToCloud');
+        //console.log('uploadToCloud');
         return {
             filename: path.basename(filePath),
             oritinalName: originalName,
@@ -89,9 +89,9 @@ class FileUploadServices {
                 
                 try {
                     const taskId = req.params.task_id;
-                    const uploadedBy = req.user.userId;
+                    const uploadedBy = req.user.id;
                     const processedFiles = [];
-                    console.log(req.files)
+                    //console.log(req.files)
                     for (const file of req.files) {
                         // Check storage limit
                         await this.checkStorageLimit(taskId, file.size);

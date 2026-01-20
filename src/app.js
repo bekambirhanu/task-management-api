@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const limiter = require('./middleware/rateLimit')
 const { MONGODB_URI } = require('../envVars')
 const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
-const notification_router = require('./routes/notification');
+const notificationRouter = require('./routes/notification');
 const fileRoute = require('./routes/uploads');
 
 const app = express();
@@ -35,9 +36,10 @@ app.use(cors());
 app.use(morgan('combined'));
 // To parse requests into json format for an efficient data handling
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 // To check rate limiting
 //app.use(rateLimiter);
-
+app.use('/api', limiter);
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Authentication endpoint
@@ -47,26 +49,40 @@ app.use('/api', routeAuth);
 app.use('/api', routeCRUD);
 
 // Notification endpoints
-app.use('/api/notifications', notification_router);
+app.use('/api/notifications', notificationRouter);
 
 // File Process endpoints
 app.use('/api', fileRoute);
 
 // Database connection
 try{
-  mongoose.connect(MONGODB_URI);
+  mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected successfully");
+  });
 } catch(error) {
-  if(error === mongoose.MongooseError) {
-    console.log(`MongoDB Connection Error:\n ${error}`);
-  }
-  else {
-    console.log(error);
-  }
+    console.log(`MongoDB Connection Error:\n ${error.message}`);
+
+    // process.exit(1);
 }
 
 // Basic health check route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+
+  const dbStatus = mongoose.connection.readyState === 1? "connected": "disconnected";
+
+  res.status(200).json({ 
+    status: 'OK',
+    dbStatus: dbStatus,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use(/(.*)/, (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `request ${req.originalUrl} is not found!`
+  });
 });
 
 // Error handling middleware

@@ -19,12 +19,12 @@ routeCRUD.get('/', getTask);
 routeCRUD.post('/migrate', bulkTask);
 
 // Delete a task route
-routeCRUD.delete('/d/:id', canDeleteTask, deleteTask);
+routeCRUD.delete('/:id/delete', canDeleteTask, deleteTask);
 
 // Update(assign tasks to user)
 routeCRUD.patch('/a',validateAssignTask, canAssignTask, assignDeassignTask);
 
 //Update(modify tasks)
-routeCRUD.put('/m/:id', validateModifierTask, canModifyTask, modifyTask);
+routeCRUD.put('/:id/modify', validateModifierTask, canModifyTask, modifyTask);
 
 module.exports = routeCRUD;
