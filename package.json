@@ -5,7 +5,20 @@
   "scripts": {
     "start": "node",
     "dev": "nodemon",
-    "test": "jest"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:e2e": "jest --config jest.e2e.config.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/fixtures/",
+      "/uploads"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -16,6 +29,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-openapi-validator": "^5.6.2",
     "express-rate-limit": "^8.2.1",
     "express-validator": "^7.3.0",
     "helmet": "^8.1.0",
@@ -25,13 +39,19 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.10",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
+    "socket.io-client": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.10",
-    "supertest": "^7.1.4"
+    "supertest": "^7.2.2"
   }
 }

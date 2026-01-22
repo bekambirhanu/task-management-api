@@ -2,5 +2,4 @@ node_modules
 .env
 text.txt
 .history
-test
-uploads
+coverage/

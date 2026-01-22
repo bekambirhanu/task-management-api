@@ -9,6 +9,10 @@ const routeAuth = require('./routes/auth');
 const routeCRUD = require('./routes/task');
 const notificationRouter = require('./routes/notification');
 const fileRoute = require('./routes/uploads');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+const swaggerValidation = require('./middleware/swaggerValidation');
+
 
 const app = express();
 
@@ -42,6 +46,19 @@ app.use(express.urlencoded({extended: true}));
 app.use('/api', limiter);
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Swagger
+app.use(swaggerValidation);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "Task Manager API Documentation"
+}));
+
+// Optional: Add JSON endpoint for Swagger spec
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
 // Authentication endpoint
 app.use('/api', routeAuth);
 

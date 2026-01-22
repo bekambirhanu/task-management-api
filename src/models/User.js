@@ -9,12 +9,14 @@ const userSchema = new Schema({
         required: true,
         unique: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        match: [/^[^@]+@[^@]+\.[^@]+$/, "Invalid Email address"]
     },
 
     password: {
         type: String,
         required: true,
+        select: false
     },
 
     first_name: {
@@ -55,6 +57,15 @@ const userSchema = new Schema({
     timestamps: true
  });
 
+
+ // ---------------------EXCLUDE THE PASSWORD-----------------
+ userSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    delete ret.password;
+    delete ret.__v;
+    return ret;
+  }
+});
 
 //-----------------------PRE-HOOKS----------------------------
 
