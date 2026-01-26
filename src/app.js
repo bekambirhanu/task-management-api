@@ -12,6 +12,7 @@ const fileRoute = require('./routes/uploads');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const swaggerValidation = require('./middleware/swaggerValidation');
+const adminRoute = require('./routes/admin');
 
 
 const app = express();
@@ -70,6 +71,9 @@ app.use('/api/notifications', notificationRouter);
 
 // File Process endpoints
 app.use('/api', fileRoute);
+
+// Admin route
+app.use('/admin', adminRoute);
 
 // Database connection
 try{
