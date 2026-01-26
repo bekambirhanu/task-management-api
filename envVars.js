@@ -24,10 +24,12 @@ const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 
 const AWS_S3_URL = process.env.AWS_S3_URL;
 
+const REDIS_URI = process.env.REDIS_URI;
+
 module.exports = {
     MONGODB_URI,
     JWT_SECRET_TOKEN,
-    PORT, 
+    PORT,
     PASSWORD_SENDER_EMAIL,
     PASSWORD_SENDER_KEY,
     EMAIL,
@@ -37,5 +39,7 @@ module.exports = {
     AWS_BUCKET_NAME,
     AWS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,
-    AWS_S3_URL
+    AWS_S3_URL,
+    // redis config
+    REDIS_URI
 };

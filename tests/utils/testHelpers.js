@@ -7,17 +7,14 @@ let mongoServer;
 exports.setupTestDB = async () => {
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
-    
-    await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+
+    await mongoose.connect(mongoUri);
 };
 
 // Clean up database
 exports.clearDatabase = async () => {
     const collections = mongoose.connection.collections;
-    
+
     for (const key in collections) {
         await collections[key].deleteMany();
     }
@@ -56,6 +53,6 @@ exports.getAuthToken = async (request, userData) => {
     const user = await request
         .post('/api/auth/register')
         .send(userData);
-    
+
     return user.body.token;
 };
