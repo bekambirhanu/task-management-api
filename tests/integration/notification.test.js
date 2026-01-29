@@ -25,10 +25,8 @@ describe('Notification API', () => {
         const userData = generateTestUser();
         authToken = await getAuthToken(request(app), userData);
 
-        const userResponse = await request(app)
-            .post('/api/auth/register')
-            .send(userData);
-        userId = userResponse.body.user._id;
+        const user = await User.findOne({ email: userData.email });
+        userId = user._id;
 
         // Create test notification
         const notification = await Notification.create({
@@ -72,12 +70,10 @@ describe('Notification API', () => {
             // Create another user with notifications
             const otherUserData = generateTestUser();
             const otherToken = await getAuthToken(request(app), otherUserData);
-            const otherUserResponse = await request(app)
-                .post('/api/auth/register')
-                .send(otherUserData);
+            const otherUser = await User.findOne({ email: otherUserData.email });
 
             await Notification.create({
-                user: otherUserResponse.body.user._id,
+                user: otherUser._id,
                 type: 'system',
                 title: 'Other User Notification',
                 message: 'This should not be visible',

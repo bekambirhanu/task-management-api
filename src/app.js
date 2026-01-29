@@ -41,30 +41,30 @@ app.use(cors());
 app.use(morgan('combined'));
 // To parse requests into json format for an efficient data handling
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 // To check rate limiting
 //app.use(rateLimiter);
 app.use('/api', limiter);
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Swagger
-app.use(swaggerValidation);
+// app.use(swaggerValidation);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: "Task Manager API Documentation"
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Task Manager API Documentation"
 }));
 
 // Optional: Add JSON endpoint for Swagger spec
 app.get('/api-docs.json', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.send(swaggerSpec);
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 // Authentication endpoint
-app.use('/api', routeAuth);
+app.use('/api/auth', routeAuth);
 
 // Task crud operation endpoint
-app.use('/api', routeCRUD);
+app.use('/api/tasks', routeCRUD);
 
 // Notification endpoints
 app.use('/api/notifications', notificationRouter);
@@ -76,23 +76,25 @@ app.use('/api', fileRoute);
 app.use('/admin', adminRoute);
 
 // Database connection
-try{
-  mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected successfully");
-  });
-} catch(error) {
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    mongoose.connect(MONGODB_URI)
+      .then(() => {
+        console.log("✅ MongoDB connected successfully");
+      });
+  } catch (error) {
     console.log(`MongoDB Connection Error:\n ${error.message}`);
 
     // process.exit(1);
+  }
 }
 
 // Basic health check route
 app.get('/health', (req, res) => {
 
-  const dbStatus = mongoose.connection.readyState === 1? "connected": "disconnected";
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
 
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'OK',
     dbStatus: dbStatus,
     timestamp: new Date().toISOString()

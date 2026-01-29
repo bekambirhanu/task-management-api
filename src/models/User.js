@@ -43,9 +43,9 @@ const userSchema = new Schema({
         default: 'user'
     },
 
-    tasks: [{ type: Schema.Types.ObjectId, ref: 'Task'}],
+    tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
 
-// fields for recovery key
+    // fields for recovery key
     password_recovery_key: String,
     recovery_key_expire_date: Date,
     recovery_key_retries: {
@@ -55,39 +55,40 @@ const userSchema = new Schema({
 
 }, {
     timestamps: true
- });
+});
 
 
- // ---------------------EXCLUDE THE PASSWORD-----------------
- userSchema.set('toJSON', {
-  transform: (doc, ret, options) => {
-    delete ret.password;
-    delete ret.__v;
-    return ret;
-  }
+// ---------------------EXCLUDE THE PASSWORD-----------------
+userSchema.set('toJSON', {
+    transform: (doc, ret, options) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+    }
 });
 
 //-----------------------PRE-HOOKS----------------------------
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+
     try {
-// Only encrypt the password when created or modified!!
         const saltRounds = 12;
         this.password = await bcrypt.hash(this.password, saltRounds);
         return next();
-    } catch(error) { console.log(error) }
+    } catch (error) { console.log(error) }
 });
 
-userSchema.pre('findOneAndUpdate', async function(next) {
-        const update = this.getUpdate();
-        if(!update.password) {return next()};
-    
+userSchema.pre('findOneAndUpdate', async function (next) {
+    const update = this.getUpdate();
+    if (!update.password) { return next() };
+
     try {
         const saltRounds = 12;
         update.password = await bcrypt.hash(update.password, saltRounds);
         return next();
-        
-    } catch(error) {
+
+    } catch (error) {
         console.log(error)
     }
 })
@@ -96,7 +97,7 @@ userSchema.pre('findOneAndUpdate', async function(next) {
 
 //password validation
 
-userSchema.methods.correctPassword = function(candidatePassword) {
+userSchema.methods.correctPassword = function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 }
 

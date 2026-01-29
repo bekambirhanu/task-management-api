@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../../src/app');
 const Task = require('../../src/models/Task');
+const User = require('../../src/models/User');
 const {
     setupTestDB,
     clearDatabase,
@@ -24,18 +25,14 @@ describe('Task API', () => {
         // Create regular user
         const userData = generateTestUser();
         authToken = await getAuthToken(request(app), userData);
-        const userResponse = await request(app)
-            .post('/api/auth/register')
-            .send(userData);
-        userId = userResponse.body.user._id;
+        const user = await User.findOne({ email: userData.email });
+        userId = user._id;
 
         // Create manager user
         const managerData = generateTestUser({ role: 'manager' });
         managerToken = await getAuthToken(request(app), managerData);
-        const managerResponse = await request(app)
-            .post('/api/auth/register')
-            .send(managerData);
-        managerId = managerResponse.body.user._id;
+        const manager = await User.findOne({ email: managerData.email });
+        managerId = manager._id;
     });
 
     afterEach(async () => {

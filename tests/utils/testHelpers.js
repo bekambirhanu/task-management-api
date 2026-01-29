@@ -50,9 +50,29 @@ exports.generateTestTask = (overrides = {}) => ({
 
 // Get auth token for testing
 exports.getAuthToken = async (request, userData) => {
+    // Generate verification entry first
+    const verifyKey = 'test-verification-key';
+    await exports.createVerificationEntry(userData.email, verifyKey);
+
+    // Add key to registration data
+    const registrationData = {
+        ...userData,
+        verify_key: verifyKey
+    };
+
     const user = await request
         .post('/api/auth/register')
-        .send(userData);
+        .send(registrationData);
 
     return user.body.token;
+};
+
+// Create verification entry
+exports.createVerificationEntry = async (email, key = 'test-key') => {
+    const VerifyEmail = require('../../src/models/VerifyEmail');
+    await VerifyEmail.create({
+        email,
+        verify_key: key
+    });
+    return key;
 };
